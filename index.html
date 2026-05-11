@@ -33,14 +33,18 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
-/** * Slinky Escape - Final Audio Correction
+/** * Slinky Escape - Absolute Audio Fix
  * Zeno Games Studio
  */
 
-// Lớp mã hóa chuỗi (Obfuscation) giữ nguyên
 const _0x5f21=['\x6a\x75\x6d\x70','\x6c\x61\x6e\x64','\x66\x61\x69\x6c','\x73\x6c\x69\x6e\x6b\x79','\x73\x6c\x69\x6e\x6b\x79\x5f\x32'];
 (function(_0x1b2c3d,_0x5f21aa){const _0x4d3e2f=function(_0x3a2b1c){while(--_0x3a2b1c){_0x1b2c3d['push'](_0x1b2c3d['shift']());}};_0x4d3e2f(++_0x5f21aa);}(_0x5f21,0x1b8));
 const _0x3e1a=function(_0x1b2c3d,_0x5f21aa){_0x1b2c3d=_0x1b2c3d-0x0;let _0x4d3e2f=_0x5f21[_0x1b2c3d];return _0x4d3e2f;};
+
+// Giải mã trước tên để tránh lỗi xáo trộn index
+const S_JMP = _0x3e1a(0x1); // jump
+const S_LND = _0x3e1a(0x2); // land
+const S_FAL = _0x3e1a(0x0); // fail
 
 window.addEventListener('touchmove',(e)=>{if(e.cancelable)e.preventDefault();},{passive:false});
 const canvas=document.getElementById('gameCanvas');const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
@@ -143,8 +147,7 @@ class CoreGame{
             if(this.touch.active){
                 this.touch.active=false;this.player.vx=-this.touch.curX*0.14;this.player.vy=-this.touch.curY*0.17;
                 this.player.isFlying=true;
-                // FIX: jump.mp3 là _0x3e1a(0x0)
-                this.playSound(_0x3e1a(0x0)); 
+                this.playSound(S_JMP); // Sử dụng biến đã giải mã nhảy
                 this.touch.curX=0;this.touch.curY=0;
             }
         });
@@ -165,16 +168,12 @@ class CoreGame{
                 if(!p.isScored){
                     p.isScored=true;this.score++;document.getElementById('scoreVal').innerText=this.score;
                     if(this.score>this.best){this.best=this.score;localStorage.setItem('slinky_best',this.best);document.getElementById('bestVal').innerText=this.best;}
-                    // FIX: land.mp3 là _0x3e1a(0x1)
-                    this.playSound(_0x3e1a(0x1)); 
+                    this.playSound(S_LND); // Sử dụng biến đã giải mã land
                     this.addPlatform();
                 }
             }
         });
-        if(this.player.y>window.innerHeight+100){this.state='GAMEOVER';
-            // FIX: fail.mp3 là _0x3e1a(0x2)
-            this.playSound(_0x3e1a(0x2));
-        }
+        if(this.player.y>window.innerHeight+100){this.state='GAMEOVER';this.playSound(S_FAL);} // Sử dụng biến đã giải mã fail
     }
     draw(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
