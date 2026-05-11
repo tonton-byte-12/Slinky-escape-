@@ -33,11 +33,11 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
-/** * Slinky Escape - Final Fixed Version
- * Phát triển bởi Zeno Games Studio 
+/** * Slinky Escape - Audio Fix Version
+ * Zeno Games Studio - Chỉ làm việc trên Mobile
  */
 
-// Lớp bảo vệ Obfuscation cho các chuỗi hệ thống
+// Lớp mã hóa chuỗi hệ thống để bảo vệ mã nguồn
 const _0x5f21=['\x6a\x75\x6d\x70','\x6c\x61\x6e\x64','\x66\x61\x69\x6c','\x73\x6c\x69\x6e\x6b\x79','\x73\x6c\x69\x6e\x6b\x79\x5f\x32'];
 (function(_0x1b2c3d,_0x5f21aa){const _0x4d3e2f=function(_0x3a2b1c){while(--_0x3a2b1c){_0x1b2c3d['push'](_0x1b2c3d['shift']());}};_0x4d3e2f(++_0x5f21aa);}(_0x5f21,0x1b8));
 const _0x3e1a=function(_0x1b2c3d,_0x5f21aa){_0x1b2c3d=_0x1b2c3d-0x0;let _0x4d3e2f=_0x5f21[_0x1b2c3d];return _0x4d3e2f;};
@@ -142,7 +142,9 @@ class CoreGame{
         canvas.addEventListener('touchend',()=>{
             if(this.touch.active){
                 this.touch.active=false;this.player.vx=-this.touch.curX*0.14;this.player.vy=-this.touch.curY*0.17;
-                this.player.isFlying=true;this.playSound(_0x3e1a(0x1));this.touch.curX=0;this.touch.curY=0;
+                this.player.isFlying=true;
+                this.playSound(_0x3e1a(0x3)); // Sửa ID âm thanh Jump
+                this.touch.curX=0;this.touch.curY=0;
             }
         });
     }
@@ -150,7 +152,7 @@ class CoreGame{
         document.getElementById('opt1').classList.toggle('active',n===1);
         document.getElementById('opt2').classList.toggle('active',n===2);
     }
-    playSound(k){try{sndObjs[k].currentTime=0;sndObjs[k].play();}catch(e){}}
+    playSound(k){try{if(sndObjs[k]){sndObjs[k].currentTime=0;sndObjs[k].play();}}catch(e){}}
     reset(){this.score=0;this.cameraX=0;document.getElementById('scoreVal').innerText=0;this.player.reset();this.init();this.state='PLAYING';}
     update(){
         if(this.state!=='PLAYING') return;this.player.update();
@@ -162,11 +164,12 @@ class CoreGame{
                 if(!p.isScored){
                     p.isScored=true;this.score++;document.getElementById('scoreVal').innerText=this.score;
                     if(this.score>this.best){this.best=this.score;localStorage.setItem('slinky_best',this.best);document.getElementById('bestVal').innerText=this.best;}
-                    this.playSound(_0x3e1a(0x2));this.addPlatform();
+                    this.playSound(_0x3e1a(0x4)); // Sửa ID âm thanh Land
+                    this.addPlatform();
                 }
             }
         });
-        if(this.player.y>window.innerHeight+100){this.state='GAMEOVER';this.playSound(_0x3e1a(0x3));}
+        if(this.player.y>window.innerHeight+100){this.state='GAMEOVER';this.playSound(_0x3e1a(0x0));} // Sửa ID âm thanh Fail
     }
     draw(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
