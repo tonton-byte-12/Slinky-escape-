@@ -3,47 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Slinky Escape - Zeno Games</title>
-
+    <title>Slinky Escape - Zeno Games Studio</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Slinky Escape">
     <link rel="apple-touch-icon" href="icon_ios.png">
-
     <style>
-        * { 
-            touch-action: none !important; 
-            -webkit-user-select: none; 
-            user-select: none; 
-            -webkit-tap-highlight-color: transparent;
-        }
-        html, body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden !important; 
-            background-color: #000; 
-            position: fixed;
-            top: 0; left: 0;
-        }
+        * { touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden !important; background-color: #000; position: fixed; top: 0; left: 0; }
         canvas { display: block; width: 100vw; height: 100vh; }
-        #ui {
-            position: absolute; 
-            top: env(safe-area-inset-top, 35px);
-            width: 100%; text-align: center;
-            color: white; font-family: Arial, sans-serif; font-size: 22px;
-            font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            pointer-events: none; z-index: 100; display: none;
-        }
+        #ui { position: absolute; top: env(safe-area-inset-top, 35px); width: 100%; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); pointer-events: none; z-index: 100; display: none; }
+        #menuBtn { position: absolute; top: env(safe-area-inset-top, 35px); right: 20px; width: 50px; height: 50px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 10px; color: white; font-size: 12px; display: flex; align-items: center; justify-content: center; z-index: 200; font-family: Arial, sans-serif; font-weight: bold; }
+        #charSelect { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); border: 3px solid #00d4ff; border-radius: 20px; padding: 20px; display: none; flex-direction: column; align-items: center; z-index: 300; color: white; font-family: Arial, sans-serif; }
+        .char-option { margin: 10px; padding: 10px; border: 2px solid transparent; border-radius: 10px; }
+        .char-option.active { border-color: #00d4ff; background: rgba(0,212,255,0.2); }
+        .char-option img { width: 80px; height: 80px; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        SCORE: <span id="scoreVal">0</span> | BEST: <span id="bestVal">0</span>
+    <div id="menuBtn">MENU</div>
+    <div id="charSelect">
+        <h3>CHỌN NHÂN VẬT</h3>
+        <div style="display: flex;">
+            <div class="char-option active" id="opt1"><img src="slinky.png"></div>
+            <div class="char-option" id="opt2"><img src="slinky_2.png"></div>
+        </div>
+        <button id="closeMenu" style="margin-top:15px; padding:8px 20px; border-radius:5px; background:#00d4ff; border:none; color:black; font-weight:bold;">XÁC NHẬN</button>
     </div>
+    <div id="ui">SCORE: <span id="scoreVal">0</span> | BEST: <span id="bestVal">0</span></div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
-/* Zeno Games Studio - Cập nhật bục di chuyển ngẫu nhiên */
-const _0x5f2a=['\x6c\x6f\x63\x61\x74\x69\x6f\x6e','\x68\x6f\x73\x74\x6e\x61\x6d\x65','\x69\x6e\x63\x6c\x75\x64\x65\x73','\x67\x69\x74\x68\x75\x62\x2e\x69\x6f'];(function(){if(!window[_0x5f2a[0]][_0x5f2a[1]][_0x5f2a[2]](_0x5f2a[3])){console.log("Ready");}})();window.addEventListener('touchmove',(e)=>{if(e.cancelable)e.preventDefault();},{passive:false});const canvas=document.getElementById('gameCanvas');const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;function resize(){canvas.width=window.innerWidth*dpr;canvas.height=window.innerHeight*dpr;canvas.style.width=window.innerWidth+'px';canvas.style.height=window.innerHeight+'px';ctx.scale(dpr,dpr);}window.addEventListener('resize',resize);resize();const assets={images:{start_bg:'start_bg.png',bg1:'bg1.jpg',bg2:'bg2.png',bg3:'bg3.png',slinky:'slinky.png',floor:'floor.png'},sounds:{jump:'jump.mp3',land:'land.mp3',fail:'fail.mp3'}};const imgObjs={};const sndObjs={};let loaded=0;const total=Object.keys(assets.images).length;function loadAll(cb){for(let k in assets.images){const img=new Image();img.onload=()=>{if(++loaded===total)cb();};img.src=assets.images[k];imgObjs[k]=img;}for(let k in assets.sounds){sndObjs[k]=new Audio(assets.sounds[k]);sndObjs[k].load();}}class Slinky{constructor(){this.size=65;this.reset();}reset(){this.vx=0;this.vy=0;this.isFlying=false;this.gravity=0.6;this.scaleX=1;this.scaleY=1;this.rotation=0;}update(){if(this.isFlying){this.vy+=this.gravity;this.x+=this.vx;this.y+=this.vy;let speed=Math.sqrt(this.vx**2+this.vy**2);this.scaleY=1+speed*0.015;this.scaleX=1/this.scaleY;this.rotation=Math.atan2(this.vy,this.vx)+Math.PI/2;}else{this.rotation=0;this.scaleY=1+Math.sin(Date.now()*0.008)*0.05;this.scaleX=1/this.scaleY;}}draw(camX){ctx.save();ctx.translate(this.x-camX,this.y);ctx.rotate(this.rotation);ctx.scale(this.scaleX,this.scaleY);ctx.drawImage(imgObjs.slinky,-this.size/2,-this.size+15,this.size,this.size);ctx.restore();}}class Platform{constructor(x,y,w){this.x=x;this.y=y;this.baseX=x;this.baseY=y;this.w=w;this.h=50;this.isScored=false;this.moveType=Math.random()>0.5?'H':'V';this.offset=Math.random()*Math.PI*2;}update(score){if(score<50)return;let speed=score>=100?0.06:0.03;let range=score>=100?60:40;this.offset+=speed;if(this.moveType==='H'){this.x=this.baseX+Math.sin(this.offset)*range;}else{this.y=this.baseY+Math.cos(this.offset)*range;}}draw(camX){ctx.drawImage(imgObjs.floor,this.x-camX,this.y,this.w,this.h);}}class Game{constructor(){this.state='START';this.slinky=new Slinky();this.platforms=[];this.cameraX=0;this.score=0;this.best=localStorage.getItem('slinky_best')||0;document.getElementById('bestVal').innerText=this.best;this.drag={startX:0,startY:0,x:0,y:0,active:false};this.initGame();this.bind();}initGame(){this.cameraX=0;this.platforms=[];let startY=window.innerHeight*0.75;let p0=new Platform(60,startY,180);p0.moveType='NONE';this.platforms.push(p0);this.slinky.x=150;this.slinky.y=startY+8;this.slinky.isFlying=false;for(let i=0;i<5;i++)this.spawn();}spawn(){let last=this.platforms[this.platforms.length-1];let rx=last.baseX+200+Math.random()*100;let ry=window.innerHeight*0.4+(Math.random()*window.innerHeight*0.35);this.platforms.push(new Platform(rx,ry,130+Math.random()*50));}bind(){canvas.addEventListener('touchstart',e=>{const t=e.touches[0];if(this.state==='START'){this.initGame();this.state='PLAYING';document.getElementById('ui').style.display='block';return;}if(this.state==='GAMEOVER'){this.reset();return;}if(!this.slinky.isFlying){this.drag.active=true;this.drag.startX=t.clientX;this.drag.startY=t.clientY;}});canvas.addEventListener('touchmove',e=>{if(this.drag.active){const t=e.touches[0];this.drag.x=t.clientX-this.drag.startX;this.drag.y=t.clientY-this.drag.startY;let d=Math.min(Math.hypot(this.drag.x,this.drag.y),150);this.slinky.scaleY=1-d*0.003;this.slinky.scaleX=1+d*0.003;}});canvas.addEventListener('touchend',()=>{if(this.drag.active){this.drag.active=false;this.slinky.vx=-this.drag.x*0.14;this.slinky.vy=-this.drag.y*0.17;this.slinky.isFlying=true;this.playSnd('jump');this.drag.x=0;this.drag.y=0;}});}playSnd(k){try{sndObjs[k].currentTime=0;sndObjs[k].play();}catch(e){}}reset(){this.score=0;this.cameraX=0;document.getElementById('scoreVal').innerText=0;this.slinky.reset();this.initGame();this.state='PLAYING';}update(){if(this.state!=='PLAYING')return;this.slinky.update();let targetX=this.slinky.x-120;if(targetX>this.cameraX){this.cameraX+=(targetX-this.cameraX)*0.12;}this.platforms.forEach(p=>{if(p.moveType!=='NONE')p.update(this.score);if(this.slinky.vy>0&&this.slinky.x>p.x&&this.slinky.x<p.x+p.w&&this.slinky.y>=p.y&&this.slinky.y<=p.y+30){this.slinky.y=p.y+8;this.slinky.vy=0;this.slinky.vx=0;this.slinky.isFlying=false;if(!p.isScored){p.isScored=true;this.score++;document.getElementById('scoreVal').innerText=this.score;if(this.score>this.best){this.best=this.score;localStorage.setItem('slinky_best',this.best);document.getElementById('bestVal').innerText=this.best;}this.playSnd('land');this.spawn();}}});if(this.slinky.y>window.innerHeight+100){this.state='GAMEOVER';this.playSnd('fail');}}draw(){ctx.clearRect(0,0,canvas.width,canvas.height);if(this.state==='START'){ctx.drawImage(imgObjs.start_bg,0,0,window.innerWidth,window.innerHeight);}else{this.drawParallax();this.platforms.forEach(p=>p.draw(this.cameraX));if(this.drag.active)this.drawGuide();this.slinky.draw(this.cameraX);if(this.state==='GAMEOVER')this.drawEnd();}}drawParallax(){const w=window.innerWidth,h=window.innerHeight;ctx.drawImage(imgObjs.bg1,0,0,w,h);let p2=(this.cameraX*0.2)%w;ctx.drawImage(imgObjs.bg2,-p2,h-350,w,250);ctx.drawImage(imgObjs.bg2,w-p2,h-350,w,250);let p3=(this.cameraX*0.5)%w;ctx.drawImage(imgObjs.bg3,-p3,h-220,w,220);ctx.drawImage(imgObjs.bg3,w-p3,h-220,w,220);}drawGuide(){ctx.fillStyle="rgba(255,255,255,0.35)";let tx=this.slinky.x-this.cameraX,ty=this.slinky.y-15;let tvx=-this.drag.x*0.14,tvy=-this.drag.y*0.17;for(let i=0;i<18;i++){ctx.beginPath();ctx.arc(tx,ty,3,0,6.28);ctx.fill();tvy+=0.6;tx+=tvx*1.8;ty+=tvy*1.8;}}drawEnd(){ctx.fillStyle="rgba(0,0,0,0.75)";ctx.fillRect(0,0,window.innerWidth,window.innerHeight);ctx.fillStyle="white";ctx.textAlign="center";ctx.font="bold 32px Arial";ctx.fillText("GAME OVER",window.innerWidth/2,window.innerHeight/2-20);ctx.font="20px Arial";ctx.fillText("Chạm để thử lại",window.innerWidth/2,window.innerHeight/2+40);}}loadAll(()=>{const game=new Game();function run(){game.update();game.draw();requestAnimationFrame(run);}run();});
+/* Toàn bộ tính năng cũ được giữ nguyên và làm rối bởi Zeno Games Studio */
+const _0x1a2b=['\x6c\x6f\x63\x61\x74\x69\x6f\x6e','\x68\x6f\x73\x74\x6e\x61\x6d\x65','\x69\x6e\x63\x6c\x75\x64\x65\x73','\x67\x69\x74\x68\x75\x62\x2e\x69\x6f','\x73\x6c\x69\x6e\x6b\x79','\x73\x6c\x69\x6e\x6b\x79\x5f\x32','\x6a\x75\x6d\x70','\x6c\x61\x6e\x64','\x66\x61\x69\x6c'];
+(function(_0x3c5d1e,_0x1a2b12){const _0x4e2a1b=function(_0x2d3e1a){while(--_0x2d3e1a){_0x3c5d1e['push'](_0x3c5d1e['shift']());}};_0x4e2a1b(++_0x1a2b12);}(_0x1a2b,0x1a5));const _0x4b2a=function(_0x3c5d1e,_0x1a2b12){_0x3c5d1e=_0x3c5d1e-0x0;let _0x4e2a1b=_0x1a2b[_0x3c5d1e];return _0x4e2a1b;};
+
+window.addEventListener('touchmove', (e) => { if(e.cancelable) e.preventDefault(); }, { passive: false });
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const dpr = window.devicePixelRatio || 1;
+
+function resize() {
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', resize);
+resize();
+
+const assets = {
+    images: {
+        start_bg: 'start_bg.png', bg1: 'bg1.jpg', bg2: 'bg2.png', bg3: 'bg3.png',
+        slinky: 'slinky.png', slinky_2: 'slinky_2.png', floor: 'floor.png'
+    },
+    sounds: { jump: 'jump.mp3', land: 'land.mp3', fail: 'fail.mp3' }
+};
+
+const imgObjs = {}; const sndObjs = {}; let loaded = 0;
+const total = Object.keys(assets.images).length;
+
+function loadAll(cb) {
+    for (let k in assets.images) {
+        const img = new Image();
+        img.onload = () => { if(++loaded === total) cb(); };
+        img.src = assets.images[k];
+        imgObjs[k] = img;
+    }
+    for (let k in assets.sounds) {
+        sndObjs[k] = new Audio(assets.sounds[k]);
+        sndObjs[k].load();
+    }
+}
+
+class Slinky {
+    constructor() { this.size = 0x41; this.skin = _0x4b2a(0x4); this.reset(); }
+    reset() { this.vx = 0; this.vy = 0; this.isFlying = !1; this.gravity = 0.6; this.scaleX = 1; this.scaleY = 1; this.rotation = 0; }
+    update() {
+        if (this.isFlying) {
+            this.vy += this.gravity; this.x += this.vx; this.y += this.vy;
+            let s = Math.sqrt(this.vx**2 + this.vy**2);
+            this.scaleY = 1 + s * 0.015; this.scaleX = 1 / this.scaleY;
+            this.rotation = Math.atan2(this.vy, this.vx) + Math.PI/2;
+        } else {
+            this.rotation = 0;
+            this.scaleY = 1 + Math.sin(Date.now() * 0.008) * 0.05;
+            this.scaleX = 1 / this.scaleY;
+        }
+    }
+    draw(cX) {
+        ctx.save(); ctx.translate(this.x - cX, this.y); ctx.rotate(this.rotation);
+        ctx.scale(this.scaleX, this.scaleY);
+        ctx.drawImage(imgObjs[this.skin], -this.size/2, -this.size + 0xf, this.size, this.size);
+        ctx.restore();
+    }
+}
+
+class Platform {
+    constructor(x, y, w) {
+        this.x = x; this.y = y; this.baseX = x; this.baseY = y; this.w = w; this.h = 0x32;
+        this.isScored = !1; this.moveType = Math.random() > 0.5 ? 'H' : 'V';
+        this.offset = Math.random() * Math.PI * 2;
+    }
+    update(s) {
+        if (s < 0x32) return; // Dưới 50 điểm không di chuyển
+        let sp = s >= 0x64 ? 0.06 : 0.03; // Trên 100 điểm di chuyển nhanh hơn
+        let r = s >= 0x64 ? 0x3c : 0x28;
+        this.offset += sp;
+        if (this.moveType === 'H') this.x = this.baseX + Math.sin(this.offset) * r;
+        else this.y = this.baseY + Math.cos(this.offset) * r;
+    }
+    draw(cX) { ctx.drawImage(imgObjs.floor, this.x - cX, this.y, this.w, this.h); }
+}
+
+class Game {
+    constructor() {
+        this.state = 'START'; this.slinky = new Slinky(); this.platforms = [];
+        this.cameraX = 0; this.score = 0;
+        this.best = localStorage.getItem('slinky_best') || 0;
+        document.getElementById('bestVal').innerText = this.best;
+        this.drag = { startX: 0, startY: 0, x: 0, y: 0, active: !1 };
+        this.initGame(); this.bind();
+    }
+    initGame() {
+        this.cameraX = 0; this.platforms = [];
+        let sY = window.innerHeight * 0.75;
+        let p0 = new Platform(0x3c, sY, 0xb4); p0.moveType = 'NONE';
+        this.platforms.push(p0);
+        this.slinky.x = 0x96; this.slinky.y = sY + 0x8; this.slinky.isFlying = !1;
+        for (let i = 0; i < 0x5; i++) this.spawn();
+    }
+    spawn() {
+        let l = this.platforms[this.platforms.length - 1];
+        let rx = l.baseX + 0xc8 + Math.random() * 0x64;
+        let ry = window.innerHeight * 0.4 + (Math.random() * window.innerHeight * 0.35);
+        this.platforms.push(new Platform(rx, ry, 0x82 + Math.random() * 0x32));
+    }
+    bind() {
+        document.getElementById('menuBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('charSelect').style.display = 'flex'; };
+        document.getElementById('opt1').onclick = () => { this.slinky.skin = _0x4b2a(0x4); document.getElementById('opt1').classList.add('active'); document.getElementById('opt2').classList.remove('active'); };
+        document.getElementById('opt2').onclick = () => { this.slinky.skin = _0x4b2a(0x5); document.getElementById('opt2').classList.add('active'); document.getElementById('opt1').classList.remove('active'); };
+        document.getElementById('closeMenu').onclick = () => { document.getElementById('charSelect').style.display = 'none'; };
+
+        canvas.addEventListener('touchstart', e => {
+            const t = e.touches[0];
+            if (document.getElementById('charSelect').style.display === 'flex') return;
+            if (this.state === 'START') { this.initGame(); this.state = 'PLAYING'; document.getElementById('ui').style.display = 'block'; return; }
+            if (this.state === 'GAMEOVER') { this.reset(); return; }
+            if (!this.slinky.isFlying) { this.drag.active = !0; this.drag.startX = t.clientX; this.drag.startY = t.clientY; }
+        });
+        canvas.addEventListener('touchmove', e => {
+            if (this.drag.active) {
+                const t = e.touches[0];
+                this.drag.x = t.clientX - this.drag.startX; this.drag.y = t.clientY - this.drag.startY;
+                let d = Math.min(Math.hypot(this.drag.x, this.drag.y), 0x96);
+                this.slinky.scaleY = 1 - d * 0.003; this.slinky.scaleX = 1 + d * 0.003;
+            }
+        });
+        canvas.addEventListener('touchend', () => {
+            if (this.drag.active) {
+                this.drag.active = !1;
+                this.slinky.vx = -this.drag.x * 0.14; this.slinky.vy = -this.drag.y * 0.17;
+                this.slinky.isFlying = !0; this.playSnd(_0x4b2a(0x6));
+                this.drag.x = 0; this.drag.y = 0;
+            }
+        });
+    }
+    playSnd(k) { try { sndObjs[k].currentTime = 0; sndObjs[k].play(); } catch(e) {} }
+    reset() { this.score = 0; this.cameraX = 0; document.getElementById('scoreVal').innerText = 0; this.slinky.reset(); this.initGame(); this.state = 'PLAYING'; }
+    update() {
+        if (this.state !== 'PLAYING') return;
+        this.slinky.update();
+        let tX = this.slinky.x - 0x78;
+        if (tX > this.cameraX) this.cameraX += (tX - this.cameraX) * 0.12;
+        this.platforms.forEach(p => {
+            if (p.moveType !== 'NONE') p.update(this.score);
+            if (this.slinky.vy > 0 && this.slinky.x > p.x && this.slinky.x < p.x + p.w && this.slinky.y >= p.y && this.slinky.y <= p.y + 0x1e) {
+                this.slinky.y = p.y + 0x8; this.slinky.vy = 0; this.slinky.vx = 0; this.slinky.isFlying = !1;
+                if (!p.isScored) {
+                    p.isScored = !0; this.score++; document.getElementById('scoreVal').innerText = this.score;
+                    if (this.score > this.best) { this.best = this.score; localStorage.setItem('slinky_best', this.best); document.getElementById('bestVal').innerText = this.best; }
+                    this.playSnd(_0x4b2a(0x7)); this.spawn();
+                }
+            }
+        });
+        if (this.slinky.y > window.innerHeight + 0x64) { this.state = 'GAMEOVER'; this.playSnd(_0x4b2a(0x8)); }
+    }
+    draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (this.state === 'START') ctx.drawImage(imgObjs.start_bg, 0, 0, window.innerWidth, window.innerHeight);
+        else { this.drawParallax(); this.platforms.forEach(p => p.draw(this.cameraX)); if(this.drag.active) this.drawGuide(); this.slinky.draw(this.cameraX); if(this.state === 'GAMEOVER') this.drawEnd(); }
+    }
+    drawParallax() {
+        const w = window.innerWidth, h = window.innerHeight;
+        ctx.drawImage(imgObjs.bg1, 0, 0, w, h);
+        let p2 = (this.cameraX * 0.2) % w; ctx.drawImage(imgObjs.bg2, -p2, h - 0x15e, w, 0xfa); ctx.drawImage(imgObjs.bg2, w - p2, h - 0x15e, w, 0xfa);
+        let p3 = (this.cameraX * 0.5) % w; ctx.drawImage(imgObjs.bg3, -p3, h - 0xdc, w, 0xdc); ctx.drawImage(imgObjs.bg3, w - p3, h - 0xdc, w, 0xdc);
+    }
+    drawGuide() {
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        let tX = this.slinky.x - this.cameraX, tY = this.slinky.y - 0xf;
+        let tVX = -this.drag.x * 0.14, tVY = -this.drag.y * 0.17;
+        for (let i = 0; i < 0x12; i++) { ctx.beginPath(); ctx.arc(tX, tY, 0x3, 0, 6.28); ctx.fill(); tVY += 0.6; tX += tVX * 1.8; tY += tVY * 1.8; }
+    }
+    drawEnd() {
+        ctx.fillStyle = "rgba(0,0,0,0.75)"; ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = "white"; ctx.textAlign = "center"; ctx.font = "bold 32px Arial";
+        ctx.fillText("GAME OVER", window.innerWidth/2, window.innerHeight/2 - 0x14);
+        ctx.font = "20px Arial"; ctx.fillText("Chạm để thử lại", window.innerWidth/2, window.innerHeight/2 + 0x28);
+    }
+}
+loadAll(() => { const game = new Game(); function run() { game.update(); game.draw(); requestAnimationFrame(run); } run(); });
 </script>
 </body>
 </html>
